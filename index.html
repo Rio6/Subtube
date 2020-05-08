@@ -14,6 +14,7 @@
                 for(let file of e.target.files) {
                     reader.readAsText(file);
                 }
+                addSubtitle('iframe-player', document.getElementById('srt-area').value);
             }
 
             function loadSubtitle() {

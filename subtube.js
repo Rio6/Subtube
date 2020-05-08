@@ -29,7 +29,6 @@ function createSRTPlayer(iframe) {
 
     // SRT element
     let srtText = document.createElement('span');
-    srtText.id = iframe.id + '-srt';
     srtText.style.cssText = `
         position: absolute;
         left: 50%;
@@ -42,6 +41,31 @@ function createSRTPlayer(iframe) {
         z-index: 1;
         visibility: hidden;
     `;
+
+    // Dragging
+    srtText.onmousedown = e => {
+        iframe.style.pointerEvents = "none";
+
+        let origin = e.pageY;
+        let pos = 0;
+        let offset = srtText.offsetTop;
+
+        let stopDrag = () => {
+            document.onmousemove = null;
+            iframe.style.pointerEvents = "";
+        };
+
+        document.onmousemove = e => {
+            if(!e.buttons) {
+                stopDrag();
+            } else {
+                pos = + e.pageY - origin + offset;
+                srtText.style.bottom = "";
+                srtText.style.top = pos / iframe.offsetHeight * 100 + '%';
+            }
+        };
+        document.onmouseup = stopDrag;
+    };
 
     let fullscreenBtn = document.createElement('div');
     fullscreenBtn.style.cssText = `
