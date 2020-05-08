@@ -24,7 +24,7 @@
     </head>
 
     <body>
-        <iframe id="iframe-player" style="position:absolute; top:0; left:0" width="640" height="360" subtube enablejsapi=1 allowfullscreen></iframe>
+        <iframe id="iframe-player" style="position:absolute; top:0; left:0" width="640" height="360" subtube enablejsapi="1" fs="0"></iframe>
         <script>
             let params = new URLSearchParams(window.location.search);
             document.getElementById('iframe-player').src=`https://www.youtube.com/embed/${params.get('v')}?enablejsapi=1`;
@@ -33,6 +33,6 @@
         <input type="file" multiple onchange="loadFile(this.files)" />
         <button onclick="loadSubtitle()">Load</button>
         <button onclick="toggleSubtitle('iframe-player')">Toggle</button>
-        <input type="range" min="1" max="200" value="100" onchange="setSubtitleSize('iframe-player', this.value)" />
+        <input type="range" min="1" max="200" value="100" autocomplete="off" onchange="setSubtitleSize('iframe-player', this.value)" />
     </body>
 </html>

@@ -69,6 +69,7 @@ function createSRTPlayer(iframe) {
     };
 
     let fullscreenBtn = document.createElement('div');
+    fullscreenBtn.title = "Fullscreen";
     fullscreenBtn.style.cssText = `
         position: absolute;
         bottom: 1px;
@@ -77,7 +78,15 @@ function createSRTPlayer(iframe) {
         height: 30px;
         z-index: 2;
         cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.6);
+        opacity: 0;
     `;
+    fullscreenBtn.onmouseenter = e => {
+        fullscreenBtn.style.opacity = "100";
+    };
+    fullscreenBtn.onmouseleave = e => {
+        fullscreenBtn.style.opacity = "0";
+    };
     fullscreenBtn.onclick = e => {
         if(document.fullscreenElement) {
             document.exitFullscreen();
