@@ -36,6 +36,7 @@ function createSRTPlayer(iframe) {
         transform: translate(-50%, 0);
         color: white;
         background-color: rgba(0, 0, 0, 0.8);
+        text-align: center;
         padding: 1px 2px;
         user-select: none;
         z-index: 1;
@@ -96,13 +97,15 @@ function createSRTPlayer(iframe) {
         player: new YT.Player(iframe.id),
         subtitles: [],
         current: 0,
+        enabled: true,
         textNode: srtText,
+
         // Updates subtitle
         updateInterval: setInterval(() => {
             let info = subInfos[iframe.id];
             let text = "";
 
-            if(info.subtitles && info.subtitles.length > 0) {
+            if(info.enabled && info.subtitles && info.subtitles.length > 0) {
                 if(!info.subtitles[info.current]) info.current = 0;
 
                 let time = info.player.getCurrentTime() * 1000;
@@ -139,6 +142,18 @@ function createSRTPlayer(iframe) {
 
 function addSubtitle(id, text) {
     subInfos[id].subtitles = Subtitle.parse(text);
+}
+
+function enableSubtitle(id, enabled=true) {
+    subInfos[id].enabled = enabled;
+}
+
+function toggleSubtitle(id) {
+    subInfos[id].enabled = !subInfos[id].enabled;
+}
+
+function setSubtitleSize(id, percent) {
+    subInfos[id].textNode.style.fontSize = percent + "%";
 }
 
 // Load Youtube iframe api

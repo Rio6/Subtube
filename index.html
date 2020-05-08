@@ -6,15 +6,15 @@
         <script src="subtube.js"></script>
 
         <script>
-            function loadFile(e) {
+            function loadFile(files) {
                 var reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById("srt-area").value += e.target.result;
+                reader.onload = function(e) {
+                    document.getElementById("srt-area").value += this.result;
                 };
-                for(let file of e.target.files) {
+                for(let file of files) {
                     reader.readAsText(file);
                 }
-                addSubtitle('iframe-player', document.getElementById('srt-area').value);
+                loadSubtitle();
             }
 
             function loadSubtitle() {
@@ -30,7 +30,9 @@
             document.getElementById('iframe-player').src=`https://www.youtube.com/embed/${params.get('v')}?enablejsapi=1`;
         </script>
         <textarea id='srt-area'></textarea>
-        <input type="file" multiple onchange="loadFile(event)" />
+        <input type="file" multiple onchange="loadFile(this.files)" />
         <button onclick="loadSubtitle()">Load</button>
+        <button onclick="toggleSubtitle('iframe-player')">Toggle</button>
+        <input type="range" min="1" max="200" value="100" onchange="setSubtitleSize('iframe-player', this.value)" />
     </body>
 </html>
