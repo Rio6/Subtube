@@ -1,7 +1,7 @@
 var subInfos = {};
 
 function onYouTubeIframeAPIReady() {
-    document.querySelectorAll('iframe[src^="https://www.youtube.com/embed"]').forEach(elm => {
+    document.querySelectorAll('iframe[subtube]').forEach(elm => {
         createSRTPlayer(elm);
     });
 }
@@ -10,7 +10,7 @@ function createSRTPlayer(iframe) {
 
     if(!iframe.id) return;
 
-    // Create a container that hold both the iframe and srt div
+    // Create a container that hold both the iframe and subtitle
     let container = document.createElement('div');
     container.style.cssText = `
         position: relative;
@@ -28,22 +28,18 @@ function createSRTPlayer(iframe) {
     iframe.parentNode.replaceChild(container, iframe);
 
     // SRT element
-    let srtDiv = document.createElement('div');
-    srtDiv.style.cssText = `
-        position: absolute;
-        pointer-events: none;
-        text-align: center;
-        bottom: 0;
-        width: 100%;
-        z-index: 1;
-    `;
-
     let srtText = document.createElement('span');
     srtText.id = iframe.id + '-srt';
     srtText.style.cssText = `
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translate(-50%, 0);
         color: white;
-        background-color: rgba(0, 0, 0, 0.85);
+        background-color: rgba(0, 0, 0, 0.8);
         padding: 1px 2px;
+        user-select: none;
+        z-index: 1;
         visibility: hidden;
     `;
 
@@ -55,12 +51,8 @@ function createSRTPlayer(iframe) {
         width: 30px;
         height: 30px;
         z-index: 2;
-        background: rgba(0, 0, 0, 0.6);
         cursor: pointer;
     `;
-    fullscreenBtn.onmouseenter = e => {
-        iframe.dispatchEvent(new MouseEvent(e.type, e));
-    };
     fullscreenBtn.onclick = e => {
         if(document.fullscreenElement) {
             document.exitFullscreen();
@@ -69,16 +61,19 @@ function createSRTPlayer(iframe) {
         }
     };
 
-    srtDiv.appendChild(srtText);
     container.appendChild(iframe);
-    container.appendChild(srtDiv);
+    container.appendChild(srtText);
     container.appendChild(fullscreenBtn);
+
+    if(subInfos[iframe.id])
+        clearInterval(subInfos[iframe.id].updateInterval);
 
     subInfos[iframe.id] = {
         player: new YT.Player(iframe.id),
         subtitles: [],
         current: 0,
         textNode: srtText,
+        // Updates subtitle
         updateInterval: setInterval(() => {
             let info = subInfos[iframe.id];
             let text = "";
@@ -114,12 +109,11 @@ function createSRTPlayer(iframe) {
             } else {
                 info.textNode.style.visibility = 'hidden';
             }
-        }, 500)
+        }, 200)
     };
 }
 
 function addSubtitle(id, text) {
-    if(!subInfos[id]) return;
     subInfos[id].subtitles = Subtitle.parse(text);
 }
 

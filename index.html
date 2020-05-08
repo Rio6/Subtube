@@ -4,9 +4,32 @@
         <meta charset="utf-8" />
         <script src="https://cdn.jsdelivr.net/npm/subtitle@2.0.3/dist/subtitle.bundle.min.js"></script>
         <script src="subtube.js"></script>
+
+        <script>
+            function loadFile(e) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById("srt-area").value += e.target.result;
+                };
+                for(let file of e.target.files) {
+                    reader.readAsText(file);
+                }
+            }
+
+            function loadSubtitle() {
+                addSubtitle('iframe-player', document.getElementById('srt-area').value);
+            }
+        </script>
     </head>
 
     <body>
-        <iframe id="iframe-player" style="position:absolute; top:0; left:0" width="640" height="360" src="https://www.youtube.com/embed/M7lc1UVf-VE?enablejsapi=1" enablejsapi=1 allowfullscreen></iframe>
+        <iframe id="iframe-player" style="position:absolute; top:0; left:0" width="640" height="360" subtube enablejsapi=1 allowfullscreen></iframe>
+        <script>
+            let params = new URLSearchParams(window.location.search);
+            document.getElementById('iframe-player').src=`https://www.youtube.com/embed/${params.get('v')}?enablejsapi=1`;
+        </script>
+        <textarea id='srt-area'></textarea>
+        <input type="file" multiple onchange="loadFile(event)" />
+        <button onclick="loadSubtitle()">Load</button>
     </body>
 </html>
