@@ -24,18 +24,20 @@ function createSRTPlayer(iframe) {
         height: 100%;
         top: 0;
         left: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
     `;
     iframe.parentNode.replaceChild(container, iframe);
 
     // SRT element
     let srtText = document.createElement('span');
+    srtText.className = 'srt-text';
     srtText.style.cssText = `
         position: absolute;
         left: 50%;
         bottom: 0;
         transform: translate(-50%, 0);
-        color: white;
-        background-color: rgba(0, 0, 0, 0.8);
         text-align: center;
         padding: 1px 2px;
         user-select: none;

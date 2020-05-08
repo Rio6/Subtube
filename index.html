@@ -10,17 +10,25 @@
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById("srt-area").value += this.result;
+                    loadSubtitle();
                 };
                 for(let file of files) {
                     reader.readAsText(file);
                 }
-                loadSubtitle();
             }
 
             function loadSubtitle() {
                 addSubtitle('iframe-player', document.getElementById('srt-area').value);
             }
         </script>
+
+        <style>
+            .srt-text {
+                color: white;
+                background-color: rgba(0, 0, 0, 0.8);
+                font-family: Arial;
+            }
+        </style>
     </head>
 
     <body>
