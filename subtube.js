@@ -3,6 +3,7 @@ var subInfos = {};
 function onYouTubeIframeAPIReady() {
     document.querySelectorAll('iframe[subtube]').forEach(elm => {
         createSRTPlayer(elm);
+        elm.dispatchEvent(new CustomEvent('playerready', {target: elm}));
     });
 }
 
