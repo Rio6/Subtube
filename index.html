@@ -41,6 +41,6 @@
         <input type="file" multiple onchange="loadFile(this.files)" />
         <button onclick="loadSubtitle()">Load</button>
         <button onclick="Subtube.toggleSubtitle('iframe-player')">Toggle</button>
-        <input type="range" min="1" max="200" value="100" autocomplete="off" onchange="setSubtitleSize('iframe-player', this.value)" />
+        <input type="range" min="1" max="200" value="100" autocomplete="off" onchange="Subtube.setSubtitleSize('iframe-player', this.value)" />
     </body>
 </html>

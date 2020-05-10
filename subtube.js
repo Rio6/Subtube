@@ -1,4 +1,8 @@
 var Subtube = {
+
+    // Fontsize relative to iframe
+    baseFontSize: 0.025,
+
     subInfos: {},
 
     createSRTPlayer: function (iframe) {
@@ -65,6 +69,7 @@ var Subtube = {
             document.onmouseup = stopDrag;
         };
 
+        // Turns the whole container fullscreen, not just the iframe
         let fullscreenBtn = document.createElement('div');
         fullscreenBtn.title = "Fullscreen";
         fullscreenBtn.style.cssText = `
@@ -99,6 +104,7 @@ var Subtube = {
         if(Subtube.subInfos[iframe.id])
             clearInterval(Subtube.subInfos[iframe.id].updateInterval);
 
+        // Store subtitle info for later use
         Subtube.subInfos[iframe.id] = {
             player: new YT.Player(iframe.id),
             subtitles: [],
@@ -110,6 +116,8 @@ var Subtube = {
             updateInterval: setInterval(() => {
                 let info = Subtube.subInfos[iframe.id];
                 let text = "";
+
+                container.style.fontSize = (container.offsetWidth * Subtube.baseFontSize) + 'px';
 
                 if(info.enabled && info.subtitles && info.subtitles.length > 0) {
                     if(!info.subtitles[info.current]) info.current = 0;
