@@ -1,174 +1,177 @@
-var subInfos = {};
+var Subtube = {
+    subInfos: {},
 
-function onYouTubeIframeAPIReady() {
-    document.querySelectorAll('iframe[subtube]').forEach(elm => {
-        createSRTPlayer(elm);
-        elm.dispatchEvent(new CustomEvent('playerready', {target: elm}));
-    });
-}
+    createSRTPlayer: function (iframe) {
 
-function createSRTPlayer(iframe) {
+        if(!iframe.id) return;
 
-    if(!iframe.id) return;
+        // Create a container that hold both the iframe and subtitle
+        let container = document.createElement('div');
+        container.style.cssText = `
+            position: relative;
+            width: ${iframe.width}px;
+            height: ${iframe.height}px;
+        `;
 
-    // Create a container that hold both the iframe and subtitle
-    let container = document.createElement('div');
-    container.style.cssText = `
-        position: relative;
-        width: ${iframe.width}px;
-        height: ${iframe.height}px;
-    `;
+        iframe.style.cssText = `
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+        `;
+        iframe.parentNode.replaceChild(container, iframe);
 
-    iframe.style.cssText = `
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        padding: 0;
-        margin: 0;
-        border: none;
-    `;
-    iframe.parentNode.replaceChild(container, iframe);
+        // SRT element
+        let srtText = document.createElement('span');
+        srtText.className = 'srt-text';
+        srtText.style.cssText = `
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translate(-50%, 0);
+            text-align: center;
+            padding: 1px 2px;
+            user-select: none;
+            z-index: 1;
+            visibility: hidden;
+        `;
 
-    // SRT element
-    let srtText = document.createElement('span');
-    srtText.className = 'srt-text';
-    srtText.style.cssText = `
-        position: absolute;
-        left: 50%;
-        bottom: 0;
-        transform: translate(-50%, 0);
-        text-align: center;
-        padding: 1px 2px;
-        user-select: none;
-        z-index: 1;
-        visibility: hidden;
-    `;
+        // Dragging
+        srtText.onmousedown = e => {
+            iframe.style.pointerEvents = "none";
 
-    // Dragging
-    srtText.onmousedown = e => {
-        iframe.style.pointerEvents = "none";
+            let origin = e.pageY;
+            let pos = 0;
+            let offset = srtText.offsetTop;
 
-        let origin = e.pageY;
-        let pos = 0;
-        let offset = srtText.offsetTop;
+            let stopDrag = () => {
+                document.onmousemove = null;
+                iframe.style.pointerEvents = "";
+            };
 
-        let stopDrag = () => {
-            document.onmousemove = null;
-            iframe.style.pointerEvents = "";
+            document.onmousemove = e => {
+                if(!e.buttons) {
+                    stopDrag();
+                } else {
+                    pos = + e.pageY - origin + offset;
+                    srtText.style.bottom = "";
+                    srtText.style.top = pos / iframe.offsetHeight * 100 + '%';
+                }
+            };
+            document.onmouseup = stopDrag;
         };
 
-        document.onmousemove = e => {
-            if(!e.buttons) {
-                stopDrag();
+        let fullscreenBtn = document.createElement('div');
+        fullscreenBtn.title = "Fullscreen";
+        fullscreenBtn.style.cssText = `
+            position: absolute;
+            bottom: 1px;
+            right: 12px;
+            width: 30px;
+            height: 30px;
+            z-index: 2;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+        `;
+        fullscreenBtn.onmouseenter = e => {
+            fullscreenBtn.style.opacity = "100";
+        };
+        fullscreenBtn.onmouseleave = e => {
+            fullscreenBtn.style.opacity = "0";
+        };
+        fullscreenBtn.onclick = e => {
+            if(document.fullscreenElement) {
+                document.exitFullscreen();
             } else {
-                pos = + e.pageY - origin + offset;
-                srtText.style.bottom = "";
-                srtText.style.top = pos / iframe.offsetHeight * 100 + '%';
+                container.requestFullscreen();
             }
         };
-        document.onmouseup = stopDrag;
-    };
 
-    let fullscreenBtn = document.createElement('div');
-    fullscreenBtn.title = "Fullscreen";
-    fullscreenBtn.style.cssText = `
-        position: absolute;
-        bottom: 1px;
-        right: 12px;
-        width: 30px;
-        height: 30px;
-        z-index: 2;
-        cursor: pointer;
-        background-color: rgba(255, 255, 255, 0.6);
-        opacity: 0;
-    `;
-    fullscreenBtn.onmouseenter = e => {
-        fullscreenBtn.style.opacity = "100";
-    };
-    fullscreenBtn.onmouseleave = e => {
-        fullscreenBtn.style.opacity = "0";
-    };
-    fullscreenBtn.onclick = e => {
-        if(document.fullscreenElement) {
-            document.exitFullscreen();
-        } else {
-            container.requestFullscreen();
-        }
-    };
+        container.appendChild(iframe);
+        container.appendChild(srtText);
+        container.appendChild(fullscreenBtn);
 
-    container.appendChild(iframe);
-    container.appendChild(srtText);
-    container.appendChild(fullscreenBtn);
+        if(Subtube.subInfos[iframe.id])
+            clearInterval(Subtube.subInfos[iframe.id].updateInterval);
 
-    if(subInfos[iframe.id])
-        clearInterval(subInfos[iframe.id].updateInterval);
+        Subtube.subInfos[iframe.id] = {
+            player: new YT.Player(iframe.id),
+            subtitles: [],
+            current: 0,
+            enabled: true,
+            textNode: srtText,
 
-    subInfos[iframe.id] = {
-        player: new YT.Player(iframe.id),
-        subtitles: [],
-        current: 0,
-        enabled: true,
-        textNode: srtText,
+            // Updates subtitle
+            updateInterval: setInterval(() => {
+                let info = Subtube.subInfos[iframe.id];
+                let text = "";
 
-        // Updates subtitle
-        updateInterval: setInterval(() => {
-            let info = subInfos[iframe.id];
-            let text = "";
+                if(info.enabled && info.subtitles && info.subtitles.length > 0) {
+                    if(!info.subtitles[info.current]) info.current = 0;
 
-            if(info.enabled && info.subtitles && info.subtitles.length > 0) {
-                if(!info.subtitles[info.current]) info.current = 0;
+                    let time = info.player.getCurrentTime() * 1000;
+                    let i = info.current;
 
-                let time = info.player.getCurrentTime() * 1000;
-                let i = info.current;
+                    while(i > 0 && info.subtitles[i].start > time) {
+                        i--;
+                    }
 
-                while(i > 0 && info.subtitles[i].start > time) {
-                    i--;
+                    while(i < info.subtitles.length && info.subtitles[i].end <= time) {
+                        i++;
+                    }
+
+                    while(i < info.subtitles.length
+                        && info.subtitles[i].start <= time
+                        && info.subtitles[i].end > time) {
+
+                        text += info.subtitles[i].text;
+                        i++;
+                    }
+
+                    info.current = i;
                 }
 
-                while(i < info.subtitles.length && info.subtitles[i].end <= time) {
-                    i++;
+                if(text !== "") {
+                    info.textNode.style.visibility = 'visible';
+                    info.textNode.innerText = text;
+                } else {
+                    info.textNode.style.visibility = 'hidden';
                 }
+            }, 200)
+        };
+    },
 
-                while(i < info.subtitles.length
-                    && info.subtitles[i].start <= time
-                    && info.subtitles[i].end > time) {
+    addSubtitle: function (id, text) {
+        Subtube.subInfos[id].subtitles = Subtitle.parse(text);
+    },
 
-                    text += info.subtitles[i].text;
-                    i++;
-                }
+    enableSubtitle: function (id, enabled=true) {
+        Subtube.subInfos[id].enabled = enabled;
+    },
 
-                info.current = i;
-            }
+    toggleSubtitle: function (id) {
+        Subtube.subInfos[id].enabled = !Subtube.subInfos[id].enabled;
+    },
 
-            if(text !== "") {
-                info.textNode.style.visibility = 'visible';
-                info.textNode.innerText = text;
-            } else {
-                info.textNode.style.visibility = 'hidden';
-            }
-        }, 200)
-    };
-}
-
-function addSubtitle(id, text) {
-    subInfos[id].subtitles = Subtitle.parse(text);
-}
-
-function enableSubtitle(id, enabled=true) {
-    subInfos[id].enabled = enabled;
-}
-
-function toggleSubtitle(id) {
-    subInfos[id].enabled = !subInfos[id].enabled;
-}
-
-function setSubtitleSize(id, percent) {
-    subInfos[id].textNode.style.fontSize = percent + "%";
+    setSubtitleSize: function (id, percent) {
+        Subtube.subInfos[id].textNode.style.fontSize = percent + "%";
+    }
 }
 
 // Load Youtube iframe api
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
+function onYouTubeIframeAPIReady() {
+    document.querySelectorAll('iframe[subtube]').forEach(elm => {
+        Subtube.createSRTPlayer(elm);
+        elm.dispatchEvent(new CustomEvent('playerready', {target: elm}));
+    });
+}
+(function() {
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+})();
