@@ -1,0 +1,13 @@
+{
+    "name": "express-server",
+    "version": "0.1.0",
+    "description": "Static express server",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "author": "Rio",
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}
