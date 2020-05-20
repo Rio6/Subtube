@@ -18,15 +18,16 @@
             }
 
             function loadSubtitle() {
-                Subtube.addSubtitle('iframe-player', document.getElementById('srt-area').value);
+                Subtube.addSubtitle('iframe-player', "Lang", document.getElementById('srt-area').value);
             }
         </script>
 
         <style>
-            .srt-text {
+            .subtube-text, .subtube-language {
                 color: white;
                 background-color: rgba(0, 0, 0, 0.8);
                 font-family: Arial;
+                border: none;
             }
         </style>
     </head>

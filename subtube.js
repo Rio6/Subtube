@@ -9,13 +9,15 @@ var Subtube = {
 
         if(!iframe.id) return;
 
+        // Youtuve player API
+        let player = new YT.Player(iframe.id);
+
         // Create a container that hold both the iframe and subtitle
         let container = document.createElement('div');
-        container.style.cssText = `
-            position: relative;
-            width: ${iframe.width}px;
-            height: ${iframe.height}px;
-        `;
+        container.className = 'subtube-container';
+        container.style.cssText = 'position: relative';
+        if(iframe.width) container.style.width = iframe.width + 'px';
+        if(iframe.height) container.style.height = iframe.height + 'px';
 
         iframe.style.cssText = `
             position: absolute;
@@ -31,7 +33,7 @@ var Subtube = {
 
         // SRT element
         let srtText = document.createElement('span');
-        srtText.className = 'srt-text';
+        srtText.className = 'subtube-text';
         srtText.style.cssText = `
             position: absolute;
             left: 50%;
@@ -69,6 +71,36 @@ var Subtube = {
             document.onmouseup = stopDrag;
         };
 
+        // Language selector
+        let langSelect = document.createElement('select');
+        langSelect.className = 'subtube-language';
+        langSelect.innerHTML = `
+            <option value="">Subtitle</option>
+        `;
+        langSelect.style.cssText = `
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            font-size: 80%;
+            text-align: center;
+            transform: translate(-50%, 0);
+            z-index: 2;
+        `;
+        langSelect.show = (autohide) => {
+            if(langSelect.timeout) clearInterval(langSelect.timeout);
+            langSelect.style.opacity = 100;
+
+            if(autohide) {
+                langSelect.timeout = setTimeout(() => {
+                    if(player.getPlayerState() === YT.PlayerState.PLAYING) {
+                        langSelect.style.opacity = 0;
+                    }
+                }, 3000);
+            }
+        };
+        langSelect.onmouseenter = () => langSelect.show(false);
+        langSelect.onmouseleave = () => langSelect.show(true);
+
         // Turns the whole container fullscreen, not just the iframe
         let fullscreenBtn = document.createElement('div');
         fullscreenBtn.title = "Fullscreen";
@@ -95,22 +127,35 @@ var Subtube = {
             } else {
                 container.requestFullscreen();
             }
+            langSelect.show(true);
         };
 
+        // Add all elements to container
         container.appendChild(iframe);
         container.appendChild(srtText);
         container.appendChild(fullscreenBtn);
+        container.appendChild(langSelect);
 
         if(Subtube.subInfos[iframe.id])
             clearInterval(Subtube.subInfos[iframe.id].updateInterval);
 
+        player.langSelectTimeout = null;
+        player.addEventListener('onStateChange', ({data}) => {
+            if(data.state === YT.PlayerState.PLAYING)
+                langSelect.show(false);
+            else
+                langSelect.show(true);
+        });
+
         // Store subtitle info for later use
         Subtube.subInfos[iframe.id] = {
-            player: new YT.Player(iframe.id),
-            subtitles: [],
+            player: player,
+            subtitles: {},
             current: 0,
             enabled: true,
             textNode: srtText,
+            langSelect: langSelect,
+            lastText: "",
 
             // Updates subtitle
             updateInterval: setInterval(() => {
@@ -119,54 +164,75 @@ var Subtube = {
 
                 container.style.fontSize = (container.offsetWidth * Subtube.baseFontSize) + 'px';
 
-                if(info.enabled && info.subtitles && info.subtitles.length > 0) {
-                    if(!info.subtitles[info.current]) info.current = 0;
+                let subs = info.subtitles[info.langSelect.value];
+                if(info.enabled && subs?.length > 0) {
+                    if(!subs[info.current]) info.current = 0;
 
                     let time = info.player.getCurrentTime() * 1000;
                     let i = info.current;
 
-                    while(i > 0 && info.subtitles[i].start > time) {
+                    while(i > 0 && subs[i].start > time) {
                         i--;
                     }
 
-                    while(i < info.subtitles.length && info.subtitles[i].end <= time) {
+                    while(i < subs.length && subs[i].end <= time) {
                         i++;
                     }
 
-                    while(i < info.subtitles.length
-                        && info.subtitles[i].start <= time
-                        && info.subtitles[i].end > time) {
+                    while(i < subs.length
+                        && subs[i].start <= time
+                        && subs[i].end > time) {
 
-                        text += info.subtitles[i].text;
+                        text += subs[i].text;
                         i++;
                     }
 
                     info.current = i;
                 }
 
-                if(text !== "") {
-                    info.textNode.style.visibility = 'visible';
-                    info.textNode.innerText = text;
-                } else {
-                    info.textNode.style.visibility = 'hidden';
+                if(text !== info.lastText) {
+                    info.lastText = text;
+                    if(text !== "") {
+                        info.textNode.style.visibility = 'visible';
+                        info.textNode.innerText = text;
+                    } else {
+                        info.textNode.style.visibility = 'hidden';
+                    }
                 }
             }, 200)
         };
     },
 
-    addSubtitle: function (id, text) {
-        Subtube.subInfos[id].subtitles = Subtitle.parse(text);
+    addSubtitle: function(id, language, text) {
+        let info = Subtube.subInfos[id];
+        info.subtitles[language] = Subtitle.parse(text);
+
+        if(info.langSelect.querySelector(`[value="${language}"]`) === null) {
+            let option = document.createElement('option');
+            option.innerText = option.value = language;
+            info.langSelect.appendChild(option);
+        }
+    },
+
+    removeSubtitle: function(id, language) {
+        delete Subtube.subInfos[id].subtitles[language];
+
+        let info = Subtube.subInfos[id];
+        let option = info?.langSelect.querySelector(`[value="${language}"]`);
+        if(option !== null) {
+            info.langSelect.removeChild(option);
+        }
     },
 
     enableSubtitle: function (id, enabled=true) {
         Subtube.subInfos[id].enabled = enabled;
     },
 
-    toggleSubtitle: function (id) {
+    toggleSubtitle: function(id) {
         Subtube.subInfos[id].enabled = !Subtube.subInfos[id].enabled;
     },
 
-    setSubtitleSize: function (id, percent) {
+    setSubtitleSize: function(id, percent) {
         Subtube.subInfos[id].textNode.style.fontSize = percent + "%";
     }
 }
@@ -179,7 +245,7 @@ function onYouTubeIframeAPIReady() {
     });
 }
 (function() {
-    var tag = document.createElement('script');
+    let tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
 })();
