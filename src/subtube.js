@@ -5,11 +5,13 @@ var Subtube = {
 
     subInfos: {},
 
-    createSRTPlayer: function (iframe) {
+    createSRTPlayer: function (iframe, videoId) {
 
         if(!iframe.id) return;
+        if(Subtube.subInfos[iframe.id]) return;
 
         // Youtuve player API
+        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
         let player = new YT.Player(iframe.id);
 
         // Create a container that hold both the iframe and subtitle
@@ -201,13 +203,21 @@ var Subtube = {
                 }
             }, 200)
         };
+
+        return player;
     },
 
     addSubtitle: function(id, language, text) {
         let info = Subtube.subInfos[id];
+
+        if(!info) {
+            console.warn("Trying to add subtitle to non-existent iframe");
+            return;
+        }
+
         info.subtitles[language] = Subtitle.parse(text);
 
-        if(info.langSelect.querySelector(`[value="${language}"]`) === null) {
+        if(!info.langSelect.querySelector(`[value="${language}"]`)) {
             let option = document.createElement('option');
             option.innerText = option.value = language;
             info.langSelect.appendChild(option);
@@ -219,7 +229,7 @@ var Subtube = {
 
         let info = Subtube.subInfos[id];
         let option = info?.langSelect.querySelector(`[value="${language}"]`);
-        if(option !== null) {
+        if(!option) {
             info.langSelect.removeChild(option);
         }
     },
@@ -240,8 +250,12 @@ var Subtube = {
 // Load Youtube iframe api
 function onYouTubeIframeAPIReady() {
     document.querySelectorAll('iframe[subtube]').forEach(elm => {
-        Subtube.createSRTPlayer(elm);
-        elm.dispatchEvent(new CustomEvent('playerready', {target: elm}));
+        elm.dispatchEvent(new CustomEvent('playerready', {
+            target: elm,
+            detail: {
+                setId: id => Subtube.createSRTPlayer(elm, id)
+            }
+        }));
     });
 }
 (function() {
