@@ -16,5 +16,3 @@ let videoId = params.get('v').replace(/[^a-zA-Z0-9_\-]/, '');
 
 let iframe = document.getElementById(iframeId);
 iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-//Subtube.createSRTPlayer(iframe);
-//iframe.on('playerready', () => loadSubtitle(params));
