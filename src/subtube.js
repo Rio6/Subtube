@@ -85,6 +85,7 @@ var Subtube = {
             left: 50%;
             font-size: 80%;
             text-align: center;
+            padding: 0.1em;
             transform: translate(-50%, 0);
             z-index: 2;
         `;

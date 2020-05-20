@@ -4,7 +4,7 @@ function loadSubtitle(params) {
     params.forEach((url, key) => {
         if(key.startsWith('subtitle-')) {
             let language = key.replace(/^subtitle-/, '');
-            fetch(url)
+            fetch(url, {mode: 'cors'})
                 .then(res => res.text())
                 .then(res => Subtube.addSubtitle(iframeId, language, res))
                 .catch(console.error);
