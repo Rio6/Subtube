@@ -11,7 +11,7 @@ var Subtube = {
         if(Subtube.subInfos[iframe.id]) return;
 
         // Youtuve player API
-        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
+        iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&playsinline=1`;
         let player = new YT.Player(iframe.id);
 
         // Create a container that hold both the iframe and subtitle
@@ -52,9 +52,9 @@ var Subtube = {
         srtText.onmousedown = e => {
             iframe.style.pointerEvents = "none";
 
-            let origin = e.pageY;
+            let origin = -e.pageY;
+            let offset = iframe.offsetHeight - srtText.offsetTop - srtText.offsetHeight;
             let pos = 0;
-            let offset = srtText.offsetTop;
 
             let stopDrag = () => {
                 document.onmousemove = null;
@@ -65,9 +65,10 @@ var Subtube = {
                 if(!e.buttons) {
                     stopDrag();
                 } else {
-                    pos = + e.pageY - origin + offset;
-                    srtText.style.bottom = "";
-                    srtText.style.top = pos / iframe.offsetHeight * 100 + '%';
+                    pos = (-e.pageY - origin + offset);
+                    if(pos > 0 && pos < iframe.offsetHeight - srtText.offsetHeight) {
+                        srtText.style.bottom = pos / iframe.offsetHeight * 100 + '%';
+                    }
                 }
             };
             document.onmouseup = stopDrag;
