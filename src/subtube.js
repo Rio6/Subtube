@@ -74,6 +74,33 @@ var Subtube = {
             document.onmouseup = stopDrag;
         };
 
+        // Menu div
+        let menu = document.createElement('div');
+        menu.className = 'subtube-menu';
+        menu.style.cssText = `
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            padding: 0.1em;
+            border-radius: 2px;
+            transform: translate(-50%, 0);
+            z-index: 2;
+        `;
+        menu.show = (autohide) => {
+            if(menu.timeout) clearInterval(menu.timeout);
+            menu.style.opacity = 100;
+
+            if(autohide) {
+                menu.timeout = setTimeout(() => {
+                    if(player.getPlayerState() === YT.PlayerState.PLAYING) {
+                        menu.style.opacity = 0;
+                    }
+                }, 3000);
+            }
+        };
+        menu.onmouseenter = () => menu.show(false);
+        menu.onmouseleave = () => menu.show(true);
+
         // Language selector
         let langSelect = document.createElement('select');
         langSelect.className = 'subtube-language';
@@ -81,74 +108,47 @@ var Subtube = {
             <option value="">Subtitle</option>
         `;
         langSelect.style.cssText = `
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            font-size: 80%;
+            font-size: 120%;
             text-align: center;
-            padding: 0.1em;
-            transform: translate(-50%, 0);
-            z-index: 2;
+            vertical-align: top;
+            margin-top: 0.25em;
         `;
-        langSelect.show = (autohide) => {
-            if(langSelect.timeout) clearInterval(langSelect.timeout);
-            langSelect.style.opacity = 100;
-
-            if(autohide) {
-                langSelect.timeout = setTimeout(() => {
-                    if(player.getPlayerState() === YT.PlayerState.PLAYING) {
-                        langSelect.style.opacity = 0;
-                    }
-                }, 3000);
-            }
-        };
-        langSelect.onmouseenter = () => langSelect.show(false);
-        langSelect.onmouseleave = () => langSelect.show(true);
 
         // Turns the whole container fullscreen, not just the iframe
         let fullscreenBtn = document.createElement('div');
         fullscreenBtn.title = "Fullscreen";
-        fullscreenBtn.style.cssText = `
-            position: absolute;
-            bottom: 1px;
-            right: 12px;
-            width: 30px;
-            height: 30px;
-            z-index: 2;
-            cursor: pointer;
-            background-color: rgba(255, 255, 255, 0.6);
-            opacity: 0;
+        fullscreenBtn.innerHTML = `
+            <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%"><g><path fill="white" d="m 10,16 2,0 0,-4 4,0 0,-2 L 10,10 l 0,6 0,0 z"></path fill="white"></g><g><path fill="white" d="m 20,10 0,2 4,0 0,4 2,0 L 26,10 l -6,0 0,0 z"></path fill="white"></g><g><path fill="white" d="m 24,24 -4,0 0,2 L 26,26 l 0,-6 -2,0 0,4 0,0 z"></path fill="white"></g><g><path fill="white" d="M 12,20 10,20 10,26 l 6,0 0,-2 -4,0 0,-4 0,0 z"></path fill="white"></g></svg>
         `;
-        fullscreenBtn.onmouseenter = e => {
-            fullscreenBtn.style.opacity = "100";
-        };
-        fullscreenBtn.onmouseleave = e => {
-            fullscreenBtn.style.opacity = "0";
-        };
+        fullscreenBtn.style.cssText = `
+            width: 2em;;
+            cursor: pointer;
+            display: inline-block;
+        `;
         fullscreenBtn.onclick = e => {
             if(document.fullscreenElement) {
                 document.exitFullscreen();
             } else {
                 container.requestFullscreen();
             }
-            langSelect.show(true);
+            menu.show(true);
         };
 
         // Add all elements to container
         container.appendChild(iframe);
         container.appendChild(srtText);
-        container.appendChild(fullscreenBtn);
-        container.appendChild(langSelect);
+        menu.appendChild(langSelect);
+        menu.appendChild(fullscreenBtn);
+        container.appendChild(menu);
 
         if(Subtube.subInfos[iframe.id])
             clearInterval(Subtube.subInfos[iframe.id].updateInterval);
 
-        player.langSelectTimeout = null;
         player.addEventListener('onStateChange', ({data}) => {
             if(data.state === YT.PlayerState.PLAYING)
-                langSelect.show(false);
+                menu.show(false);
             else
-                langSelect.show(true);
+                menu.show(true);
         });
 
         // Store subtitle info for later use
