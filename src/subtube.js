@@ -42,6 +42,7 @@ var Subtube = {
             bottom: 0;
             transform: translate(-50%, 0);
             text-align: center;
+            white-space: nowrap;
             padding: 1px 2px;
             user-select: none;
             z-index: 1;
