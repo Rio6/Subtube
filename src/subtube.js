@@ -79,11 +79,10 @@ var Subtube = {
         menu.className = 'subtube-menu';
         menu.style.cssText = `
             position: absolute;
-            top: 10px;
-            left: 50%;
-            padding: 0.1em;
+            bottom: 40px;
+            right: 10px;
             border-radius: 2px;
-            transform: translate(-50%, 0);
+            font-size: 20px;
             z-index: 2;
         `;
         menu.show = (autohide) => {
@@ -108,10 +107,9 @@ var Subtube = {
             <option value="">Subtitle</option>
         `;
         langSelect.style.cssText = `
-            font-size: 120%;
             text-align: center;
             vertical-align: top;
-            margin-top: 0.25em;
+            padding-top: 6px;
         `;
 
         // Turns the whole container fullscreen, not just the iframe
@@ -121,7 +119,7 @@ var Subtube = {
             <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%"><g><path fill="white" d="m 10,16 2,0 0,-4 4,0 0,-2 L 10,10 l 0,6 0,0 z"></path fill="white"></g><g><path fill="white" d="m 20,10 0,2 4,0 0,4 2,0 L 26,10 l -6,0 0,0 z"></path fill="white"></g><g><path fill="white" d="m 24,24 -4,0 0,2 L 26,26 l 0,-6 -2,0 0,4 0,0 z"></path fill="white"></g><g><path fill="white" d="M 12,20 10,20 10,26 l 6,0 0,-2 -4,0 0,-4 0,0 z"></path fill="white"></g></svg>
         `;
         fullscreenBtn.style.cssText = `
-            width: 2em;;
+            width: 1.5em;
             cursor: pointer;
             display: inline-block;
         `;
