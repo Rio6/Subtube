@@ -3,5 +3,5 @@ An iframe application that adds custom SRT subtitles to Youtube embbed video.
 
 ## Usage
 ```html
-<iframe allowfullscreen src="https://rio6.github.io/Subtube?v=<video id>&subtitle-Language=<SRT file location>&subtitle-Language2=<SRT file location>"></iframe>
+<iframe allowfullscreen frameborder="0" src="https://rio6.github.io/Subtube?v=<video id>&subtitle-Language=<SRT file location>&subtitle-Language2=<SRT file location>"></iframe>
 ```
