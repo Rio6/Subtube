@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="https://cdn.jsdelivr.net/npm/subtitle@2.0.3/dist/subtitle.bundle.min.js"></script>
+        <script src="subtube.js"></script>
+
+        <script>
+            function loadFile(files) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("srt-area").value += this.result;
+                    loadSubtitle();
+                };
+                for(let file of files) {
+                    reader.readAsText(file);
+                }
+            }
+
+            function loadSubtitle() {
+                Subtube.addSubtitle('iframe-player', "Lang", document.getElementById('srt-area').value);
+            }
+        </script>
+
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+            .subtube-container {
+                width: 100vw;
+                height: 100vh;
+            }
+            .subtube-text, .subtube-language, .subtube-menu {
+                color: #ddd;
+                background-color: rgba(0, 0, 0, 0.8);
+                font-family: Arial;
+                border: none;
+            }
+            select {
+                -webkit-appearance:none;
+                -moz-appearance: none;
+                -ms-appearance: none;
+                -o-appearance: none;
+                appearance: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <iframe id="iframe-player" style="position:absolute; top:0; left:0" subtube fs=0></iframe>
+        <script src="loader.js"></script>
+    </body>
+</html>
